@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>说客英语 - 学员端/家长端</title>
+<style>
+    /* ================= 基础重置 ================= */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: #E5E7EB; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+    
+    /* 手机外壳 */
+    .phone { width: 390px; height: 844px; background-color: #F2F5F8; border-radius: 44px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 10px #111827; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+    .island { width: 120px; height: 30px; background: #000; border-radius: 20px; margin: 10px auto 0 auto; z-index: 100; }
+    
+    /* 页面容器 */
+    .page { display: none; flex: 1; overflow-y: auto; padding-bottom: 80px; }
+    .page.active { display: block; animation: fadeIn 0.3s ease; }
+    .page::-webkit-scrollbar { display: none; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ================= 家长端首页 ================= */
+    .parent-header { background: linear-gradient(135deg, #4A72FF 0%, #2853F0 100%); padding: 50px 20px 60px 20px; color: white; border-radius: 0 0 24px 24px; position: relative; margin-top: -40px;}
+    .header-user { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .user-info { display: flex; align-items: center; gap: 12px; }
+    .user-avatar { width: 44px; height: 44px; background: #FFF; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; color: #4A72FF;}
+    .user-name { font-size: 18px; font-weight: bold; }
+    .user-tags { font-size: 12px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
+    .user-role { font-size: 12px; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 12px; cursor: pointer; transition: 0.2s;}
+    .user-role:active { transform: scale(0.95); }
+    .user-sub { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+    
+    .header-stats { display: flex; justify-content: space-around; background: rgba(255,255,255,0.15); border-radius: 12px; padding: 12px 0; }
+    .stat-item { text-align: center; }
+    .stat-val { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+    .stat-label { font-size: 11px; opacity: 0.9; }
+
+    /* 卡片通用 */
+    .card { background: #FFF; border-radius: 16px; padding: 16px; margin: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+    .card-title { font-size: 15px; font-weight: bold; color: #333; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;}
+    
+    /* 预警卡片 */
+    .alert-card { background: #FFF7E6; border: 1px solid #FFD591; cursor: pointer; transition: 0.2s;}
+    .alert-card:active { background: #FFE7BA; }
+    .alert-title { color: #D46B08; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;}
+    .alert-desc { font-size: 12px; color: #8C6B36; line-height: 1.5; margin-bottom: 12px; }
+    .alert-actions { display: flex; gap: 10px; }
+    .btn-primary { background: #FA8C16; color: white; border: none; padding: 8px 0; border-radius: 8px; font-size: 13px; font-weight: bold; flex: 1; cursor: pointer; transition: 0.2s;}
+    .btn-primary:active { background: #D46B08; }
+    .btn-outline { background: transparent; color: #FA8C16; border: 1px solid #FA8C16; padding: 8px 0; border-radius: 8px; font-size: 13px; font-weight: bold; flex: 1; cursor: pointer; transition: 0.2s;}
+    .btn-outline:active { background: #FFF1E6; }
+
+    /* 任务列表 */
+    .task-list { display: flex; flex-direction: column; gap: 12px; }
+    .task-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F0F0F0; padding-bottom: 12px; }
+    .task-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .task-info h4 { font-size: 14px; color: #333; margin-bottom: 4px; }
+    .task-info p { font-size: 12px; color: #999; }
+    .btn-small-blue { background: #E6F0FF; color: #1677FF; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+    .btn-small-blue:active { background: #B3D4FF; }
+    .btn-small-green { background: #F6FFED; color: #52C41A; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+    .btn-small-green:active { background: #D9F7BE; }
+
+    /* 学情报告 */
+    .progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; color: #666; }
+    .progress-bar-bg { flex: 1; height: 6px; background: #F0F0F0; border-radius: 3px; margin: 0 12px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 3px; }
+    .weakness-tag { background: #FFF1F0; color: #F5222D; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+    .ai-action { color: #F5222D; cursor: pointer; font-weight: bold;}
+    .ai-action:active { text-decoration: underline;}
+
+    /* ================= 服务进度详情 ================= */
+    .nav-back { display: flex; align-items: center; padding: 50px 20px 16px 20px; background: #FFF; font-size: 16px; font-weight: bold; color: #333; position: sticky; top: 0; z-index: 10;}
+    .nav-back span { margin-right: 10px; cursor: pointer; font-size: 20px; padding: 5px;}
+    
+    .status-card { background: #FFF; border-radius: 16px; padding: 20px; margin: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+    .status-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .status-title { font-size: 18px; font-weight: bold; color: #333; }
+    .status-time-box { text-align: right; }
+    .status-time-val { font-size: 18px; font-weight: bold; color: #FA8C16; }
+    .status-time-label { font-size: 11px; color: #999; }
+    .status-desc { font-size: 13px; color: #666; line-height: 1.6; }
+
+    /* 时间轴 */
+    .timeline { padding: 0 16px; margin-top: 20px;}
+    .timeline-item { display: flex; margin-bottom: 20px; position: relative; }
+    .timeline-item::before { content: ''; position: absolute; left: 5px; top: 20px; bottom: -20px; width: 2px; background: #E8E8E8; }
+    .timeline-item:last-child::before { display: none; }
+    .tl-dot { width: 12px; height: 12px; border-radius: 50%; background: #D9D9D9; margin-right: 16px; margin-top: 4px; position: relative; z-index: 2; flex-shrink: 0;}
+    .tl-dot.active { background: #52C41A; box-shadow: 0 0 0 4px #F6FFED; }
+    .tl-dot.doing { background: #1677FF; box-shadow: 0 0 0 4px #E6F0FF; }
+    .tl-content h4 { font-size: 14px; color: #333; margin-bottom: 4px; }
+    .tl-content p { font-size: 12px; color: #999; line-height: 1.4; }
+
+    /* 选时间 */
+    .time-slot { border: 1px solid #E8E8E8; border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; cursor: pointer; transition: 0.2s;}
+    .time-slot:active { background: #F5F5F5; }
+    .time-slot.active { border-color: #4A72FF; background: #F0F5FF; }
+    .radio-circle { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #D9D9D9; margin-right: 12px; flex-shrink: 0; display: flex; justify-content: center; align-items: center;}
+    .time-slot.active .radio-circle { border-color: #4A72FF; }
+    .time-slot.active .radio-circle::after { content: ''; width: 10px; height: 10px; background: #4A72FF; border-radius: 50%; }
+    .slot-info h4 { font-size: 14px; color: #333; margin-bottom: 4px; }
+    .slot-info p { font-size: 12px; color: #999; }
+
+    /* ================= 学员视角首页 ================= */
+    .student-header { background: linear-gradient(135deg, #52C41A 0%, #389E0D 100%); padding: 50px 20px 60px 20px; color: white; border-radius: 0 0 24px 24px; position: relative; margin-top: -40px;}
+    .task-check { width: 18px; height: 18px; border-radius: 50%; border: 1px solid #52C41A; color: #52C41A; display: flex; justify-content: center; align-items: center; font-size: 12px; margin-right: 10px;}
+    .task-info-wrapper { display: flex; align-items: flex-start; flex: 1;}
+    .teacher-card { display: flex; align-items: center; justify-content: space-between; background: #F9F9F9; padding: 12px; border-radius: 12px; }
+    .teacher-info { display: flex; align-items: center; gap: 10px; }
+    .teacher-avatar { width: 36px; height: 36px; background: #E6F7FF; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; }
+    .badge-list { display: flex; gap: 10px; margin-top: 10px; }
+    .badge-item { flex: 1; background: #F9F9F9; border-radius: 8px; padding: 10px; text-align: center; }
+    .badge-item p { font-size: 11px; color: #999; margin-top: 4px; }
+
+    /* ================= 消息与提醒 ================= */
+    .msg-header { padding: 50px 20px 16px 20px; background: #FFF; font-size: 18px; font-weight: bold; color: #333; display: flex; justify-content: space-between; align-items: center;}
+    .msg-header span { font-size: 13px; color: #999; font-weight: normal; }
+    .setting-group { background: #FFF; border-radius: 16px; margin: 16px; overflow: hidden; }
+    .group-title { font-size: 12px; color: #999; padding: 16px 16px 8px 16px; background: #F2F5F8; }
+    .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #F0F0F0; }
+    .setting-item:last-child { border-bottom: none; }
+    .setting-info h4 { font-size: 14px; color: #333; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;}
+    .setting-info p { font-size: 12px; color: #999; }
+    
+    /* 开关模拟 */
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer;}
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #1677FF; }
+    input:checked + .slider:before { transform: translateX(20px); }
+    input:disabled + .slider { background-color: #E8E8E8; cursor: not-allowed; }
+    input:disabled + .slider:before { background-color: #F5F5F5; }
+
+    /* ================= 底部导航栏 ================= */
+    .bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; height: 70px; background: #FFF; border-top: 1px solid #F0F0F0; display: flex; justify-content: space-around; align-items: center; z-index: 100; padding-bottom: 10px;}
+    .nav-item { display: flex; flex-direction: column; align-items: center; color: #999; font-size: 10px; cursor: pointer; position: relative;}
+    .nav-item.active { color: #4A72FF; }
+    .nav-item.student-active { color: #52C41A; }
+    .nav-icon { font-size: 22px; margin-bottom: 2px; }
+    .nav-badge { position: absolute; top: -2px; right: -6px; background: #F5222D; color: white; font-size: 9px; padding: 1px 4px; border-radius: 10px; border: 1px solid #FFF;}
+
+    /* ================= 全局 Toast 与 弹窗 ================= */
+    .toast-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: #FFF; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.3s; text-align: center; width: 70%; backdrop-filter: blur(5px);}
+    .toast-container.show { opacity: 1; }
+    
+    .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 500; opacity: 0; pointer-events: none; transition: 0.3s; display: flex; flex-direction: column; justify-content: flex-end; }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+    .bottom-sheet { background: #FFF; width: 100%; border-radius: 24px 24px 0 0; padding: 24px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center;}
+    .overlay.show .bottom-sheet { transform: translateY(0); }
+
+    /* 悬浮录音动画弹窗 */
+    .recording-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #FFF; opacity: 0; pointer-events: none; transition: 0.3s;}
+    .recording-modal.show { opacity: 1; pointer-events: auto; }
+    .mic-pulse { width: 100px; height: 100px; background: #52C41A; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 40px; margin-bottom: 20px; animation: pulse 1.5s infinite;}
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(82,196,26,0.7); } 70% { box-shadow: 0 0 0 40px rgba(82,196,26,0); } 100% { box-shadow: 0 0 0 0 rgba(82,196,26,0); } }
+
+    /* 移动端全屏适配 */
+    @media screen and (max-width: 500px) {
+        body { background-color: #F2F5F8; }
+        .phone { width: 100%; height: 100vh; border-radius: 0; box-shadow: none; }
+        .island { display: none; }
+        .parent-header, .student-header, .msg-header { padding-top: 20px; margin-top: 0; border-radius: 0 0 24px 24px;}
+        .nav-back { padding-top: 20px; }
+        .bottom-nav { border-radius: 0; }
+    }
+</style>
+</head>
+<body>
+
+<div class="phone">
+    <div class="island"></div>
+
+    <!-- ================= 全局弹窗组件 ================= -->
+    <div id="toast" class="toast-container">提示信息</div>
+    
+    <div id="overlay" class="overlay" onclick="closeSheet()">
+        <div class="bottom-sheet" id="sheet-content" onclick="event.stopPropagation()">
+            <!-- 动态内容 -->
+        </div>
+    </div>
+
+    <div id="recording-modal" class="recording-modal">
+        <div class="mic-pulse">🎤</div>
+        <h2 style="margin-bottom:10px;">正在聆听发音...</h2>
+        <p style="color:#A6ADB4; font-size:14px; margin-bottom:30px;">请大声朗读："I want to order a coffee."</p>
+        <div style="width:200px; height:6px; background:rgba(255,255,255,0.2); border-radius:3px; overflow:hidden;">
+            <div id="record-progress" style="width:0%; height:100%; background:#52C41A; transition:width 2s linear;"></div>
+        </div>
+    </div>
+
+    <!-- ================= 视图 1：家长端首页 ================= -->
+    <div id="page-parent" class="page active">
+        <div class="parent-header">
+            <div class="header-user">
+                <div class="user-info">
+                    <div class="user-avatar">👤</div>
+                    <div>
+                        <div style="display:flex; align-items:center;">
+                            <span class="user-name">王小明</span>
+                            <span class="user-tags">L2 进阶</span>
+                        </div>
+                        <div class="user-sub">剩余 48 课时 · 2025-12-20 到期</div>
+                    </div>
+                </div>
+                <div class="user-role" onclick="switchPage('page-student')">⇄ 切到学员</div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-item"><div class="stat-val">2h</div><div class="stat-label">本周已上</div></div>
+                <div class="stat-item"><div class="stat-val">15分</div><div class="stat-label">今日练习</div></div>
+                <div class="stat-item"><div class="stat-val">6天</div><div class="stat-label">连续打卡</div></div>
+            </div>
+        </div>
+
+        <!-- 预警卡片 (点击查看进度) -->
+        <div class="card alert-card" onclick="switchPage('page-progress')">
+            <div class="alert-title">⚠️ 约课请求处理中 <span style="font-weight:normal; font-size:11px; color:#D46B08; float:right;">2小时内答复</span></div>
+            <div class="alert-desc">系统识别到连续 2 次没约到合适老师，已定位原因：周三、周四 19:30 教师时段已满。顾问正在核实可调整的时段。</div>
+            <div class="alert-actions">
+                <button class="btn-primary" onclick="event.stopPropagation(); switchPage('page-progress')">查看处理进度</button>
+                <button class="btn-outline" onclick="event.stopPropagation(); openSheet('补充说明', '请描述您期望的时段或老师要求：', '已提交补充说明，顾问将优先处理！')">补充说明</button>
+            </div>
+        </div>
+
+        <!-- 今天要做的事 -->
+        <div class="card">
+            <div class="card-title">📌 今天要做的事 <span style="font-size:12px; color:#999; font-weight:normal;">2 项</span></div>
+            <div class="task-list">
+                <div class="task-item">
+                    <div class="task-info-wrapper">
+                        <div style="margin-right:10px; font-size:18px; color:#4A72FF;">🎤</div>
+                        <div class="task-info">
+                            <h4>单词跟读 · L1</h4>
+                            <p>10分钟 · 发音准确度</p>
+                        </div>
+                    </div>
+                    <button class="btn-small-blue" onclick="showToast('正在跳转至 AI 练习...')">去完成</button>
+                </div>
+                <div class="task-item">
+                    <div class="task-info-wrapper">
+                        <div style="margin-right:10px; font-size:18px; color:#52C41A;">📅</div>
+                        <div class="task-info">
+                            <h4>今天 19:30 上课</h4>
+                            <p>Anna W. · 25分钟 · 剩余 48课时</p>
+                        </div>
+                    </div>
+                    <button class="btn-small-green" onclick="showToast('正在进入教室，请检查摄像头和麦克风...')">进教室</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 本周学情 -->
+        <div class="card">
+            <div class="card-title">📊 本周学情 <span style="font-size:12px; color:#999; font-weight:normal;">第 12 周</span></div>
+            <div class="progress-row">
+                <span style="width:70px;">口语流利度</span>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:82%; background:#52C41A;"></div></div>
+                <span style="font-weight:bold; color:#333;">82分</span>
+            </div>
+            <div class="progress-row">
+                <span style="width:70px;">语法正确率</span>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:65%; background:#FA8C16;"></div></div>
+                <span style="font-weight:bold; color:#333;">65分</span>
+            </div>
+            <div style="font-size:12px; color:#666; margin-top:10px; background:#FFF1F0; padding:10px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                <span>薄弱项: <span class="weakness-tag">一般过去时</span></span>
+                <span class="ai-action" onclick="openSheet('领取强化包', 'AI 已为您生成专属周末强化练习包，包含 15 道错题精讲。', '领取成功！请前往今日任务查看。')">AI 强化包 ></span>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active" style="color:#4A72FF;"><div class="nav-icon">🏠</div>首页</div>
+            <div class="nav-item" onclick="showToast('约课模块正在为您加载...')"><div class="nav-icon">📅</div>约课</div>
+            <div class="nav-item" onclick="switchPage('page-msg')"><div class="nav-icon">💬</div>消息<span class="nav-badge">2</span></div>
+            <div class="nav-item" onclick="showToast('个人中心正在维护中...')"><div class="nav-icon">👤</div>我的</div>
+        </div>
+    </div>
+
+    <!-- ================= 视图 2：服务进度详情 ================= -->
+    <div id="page-progress" class="page">
+        <div class="nav-back"><span onclick="switchPage('page-parent')">←</span> 服务进度</div>
+        
+        <div class="status-card">
+            <div class="status-header">
+                <div>
+                    <div class="status-title">处理中 · 待您确认方案</div>
+                    <div class="status-desc">承诺今天 18:00 前答复 · 剩余 2小时 12分</div>
+                </div>
+                <div class="status-time-box">
+                    <div class="status-time-val">30 分钟</div>
+                    <div class="status-time-label">已进行</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="padding:20px 16px;">
+            <div style="font-size:14px; font-weight:bold; color:#333; margin-bottom:16px;">这件事走到哪一步了</div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="tl-dot active"></div>
+                    <div class="tl-content">
+                        <h4>已受理 <span style="font-size:11px; color:#999; font-weight:normal;">14:02</span></h4>
+                        <p>系统识别「近 7 天 2 次未约到 → 自动建单」</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="tl-dot active"></div>
+                    <div class="tl-content">
+                        <h4>已定位原因 <span style="font-size:11px; color:#999; font-weight:normal;">14:05</span></h4>
+                        <p>原因码 T-02 教师时段已满 (周三 / 周四 19:30 集中)</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="tl-dot doing"></div>
+                    <div class="tl-content">
+                        <h4 style="color:#1677FF;">方案待您确认 <span style="font-size:11px; color:#999; font-weight:normal;">14:32</span></h4>
+                        <p>已核实真实定位，两个时段可选，选定即锁定</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="tl-dot"></div>
+                    <div class="tl-content"><h4>待上课</h4><p>锁定后同步课表，上课前 2 小时提醒</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">为您协调到的时段</div>
+            <div class="time-slot active" onclick="selectSlot(this)">
+                <div class="radio-circle"></div>
+                <div class="slot-info">
+                    <h4>10月16日 (周三) 19:30</h4>
+                    <p>Anna W. · 原固定老师 · 25分钟</p>
+                </div>
+            </div>
+            <div class="time-slot" onclick="selectSlot(this)">
+                <div class="radio-circle"></div>
+                <div class="slot-info">
+                    <h4>10月17日 (周四) 19:00</h4>
+                    <p>Leo M. · 备选老师 · 25分钟</p>
+                </div>
+            </div>
+            <button class="btn-primary" style="width:100%; margin-top:10px; padding:14px; font-size:15px; border-radius:12px;" onclick="confirmBooking()">确认这个时间</button>
+            <div style="text-align:center; font-size:12px; color:#999; margin-top:16px;">
+                都不合适？<span style="color:#1677FF; cursor:pointer;" onclick="openSheet('申请总部协调', '请填写您期望的时段，我们将有高级排课专员为您人工协调：', '申请已提交！高级专员将在15分钟内联系您。')">申请总部协调</span>
+            </div>
+        </div>
+
+        <div style="background: #F9F9F9; border-radius: 12px; padding: 16px; margin: 16px; display:flex; justify-content:space-between;">
+            <div>
+                <h5 style="font-size:13px; color:#333; margin-bottom:4px;">👤 谁在处理</h5>
+                <p style="font-size:12px; color:#999;">顾问 小B · 已接单</p>
+            </div>
+            <div style="text-align:right;">
+                <h5 style="font-size:13px; color:#333; margin-bottom:4px;">排课员 总部</h5>
+                <p style="font-size:12px; color:#999;">待响应 · 核实空位</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 视图 3：学员视角首页 ================= -->
+    <div id="page-student" class="page">
+        <div class="student-header">
+            <div class="header-user">
+                <div class="user-info">
+                    <div class="user-avatar" style="color:#52C41A;">👦</div>
+                    <div>
+                        <div style="display:flex; align-items:center;">
+                            <span class="user-name">小明，下午好</span>
+                        </div>
+                        <div class="user-sub">今天也要勇敢开口哦</div>
+                    </div>
+                </div>
+                <div class="user-role" onclick="switchPage('page-parent')">⇄ 切到家长</div>
+            </div>
+            <div class="header-stats" style="background: rgba(255,255,255,0.2);">
+                <div class="stat-item"><div class="stat-val">6天</div><div class="stat-label">连续打卡</div></div>
+                <div class="stat-item"><div class="stat-val">1280</div><div class="stat-label">词汇量</div></div>
+                <div class="stat-item"><div class="stat-val">B1</div><div class="stat-label">口语等级</div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📌 今天的任务 <span style="font-size:12px; color:#999; font-weight:normal;">完成 1/2</span></div>
+            <div class="task-list">
+                <div class="task-item" style="opacity:0.6;">
+                    <div class="task-info-wrapper">
+                        <div class="task-check">✓</div>
+                        <div class="task-info">
+                            <h4 style="text-decoration:line-through;">单词跟读 · 坚持 3 天</h4>
+                            <p>发音准确度 91% · 已完成</p>
+                        </div>
+                    </div>
+                    <button class="btn-small-green" style="background:transparent; color:#999;">已打卡</button>
+                </div>
+                <div class="task-item">
+                    <div class="task-info-wrapper">
+                        <div class="task-check" style="border-color:#E8E8E8; color:transparent;"></div>
+                        <div class="task-info">
+                            <h4>情景对话：在餐厅点餐</h4>
+                            <p>约 5 分钟 · 真人场景模拟</p>
+                        </div>
+                    </div>
+                    <button class="btn-small-blue" style="background:#52C41A; color:white; border-radius:20px;" onclick="startRecording()">开始</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">👩‍🏫 我的老师 <span style="font-size:12px; color:#999; font-weight:normal;">今天 19:30</span></div>
+            <div class="teacher-card">
+                <div class="teacher-info">
+                    <div class="teacher-avatar">👩</div>
+                    <div>
+                        <h4 style="font-size:14px;">Anna W.</h4>
+                        <p style="font-size:12px; color:#999;">已经陪你上了 18 节课</p>
+                    </div>
+                </div>
+                <button class="btn-small-blue" onclick="showToast('老师寄语：小明最近发音越来越饱满啦，继续保持！')">看看她</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">🎖️ 最近拿到的徽章 <span style="font-size:12px; color:#999; font-weight:normal;">共 7 枚</span></div>
+            <div class="badge-list">
+                <div class="badge-item" onclick="showToast('连续 3 天打卡解锁')"><div style="font-size:24px;">🥉</div><h4 style="font-size:12px; margin-top:4px;">连续 3 天</h4><p>已获得</p></div>
+                <div class="badge-item" onclick="showToast('累计开口 100 次解锁')"><div style="font-size:24px;">🥈</div><h4 style="font-size:12px; margin-top:4px;">开口 100 次</h4><p>已获得</p></div>
+                <div class="badge-item" style="background:#FFF1F0;" onclick="showToast('还差 1 天就能解锁啦！')"><div style="font-size:24px; opacity:0.4;">🥇</div><h4 style="font-size:12px; margin-top:4px; color:#F5222D;">一周不断</h4><p style="color:#F5222D;">差 1 天</p></div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item student-active"><div class="nav-icon">🏠</div>首页</div>
+            <div class="nav-item" onclick="showToast('进入课表日历...')"><div class="nav-icon">📅</div>课表</div>
+            <div class="nav-item" onclick="switchPage('page-msg')"><div class="nav-icon">💬</div>消息</div>
+            <div class="nav-item" onclick="showToast('进入我的成就墙...')"><div class="nav-icon">👤</div>我的</div>
+        </div>
+    </div>
+
+    <!-- ================= 视图 4：消息与提醒 ================= -->
+    <div id="page-msg" class="page">
+        <div class="msg-header"><span onclick="switchPage('page-parent')" style="font-size:20px; margin-right:10px;">←</span> 消息与提醒 <span style="font-size:13px; color:#999; font-weight:normal;">全部已读</span></div>
+        
+        <div style="font-size:12px; color:#999; padding: 16px; line-height: 1.5;">
+            服务类提醒始终送达（工单进度、调课、补偿到账），营销类可随时关闭。设置对家长与学员同时生效。
+        </div>
+
+        <div class="setting-group">
+            <div class="group-title" style="background:#FFF; padding-bottom:0;">🔔 服务通知 <span style="float:right; font-size:11px; color:#999;">不可关闭</span></div>
+            <!-- 禁用按钮拦截 -->
+            <div class="setting-item" onclick="showToast('服务类通知为保障您的权益，不可关闭哦~')">
+                <div class="setting-info">
+                    <h4>约课请求已受理</h4>
+                    <p>14:02 · 顾问将在 2 小时内联系您</p>
+                </div>
+                <label class="switch" onclick="event.preventDefault();"><input type="checkbox" checked disabled><span class="slider"></span></label>
+            </div>
+            <div class="setting-item" onclick="showToast('服务类通知为保障您的权益，不可关闭哦~')">
+                <div class="setting-info">
+                    <h4>为您协调到 2 个时段</h4>
+                    <p>14:32 · 待您确认</p>
+                </div>
+                <label class="switch" onclick="event.preventDefault();"><input type="checkbox" checked disabled><span class="slider"></span></label>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <div class="group-title" style="background:#FFF; padding-bottom:0;">📚 学习提醒</div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h4>上课前 2 小时提醒</h4>
+                    <p>今天 19:30 · Anna W.</p>
+                </div>
+                <label class="switch"><input type="checkbox" checked onchange="showToast(this.checked ? '已开启提醒' : '已关闭提醒')"><span class="slider"></span></label>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h4>每日练习提醒</h4>
+                    <p>每天 19:00 · 未打卡时提醒</p>
+                </div>
+                <label class="switch"><input type="checkbox" checked onchange="showToast(this.checked ? '已开启提醒' : '已关闭提醒')"><span class="slider"></span></label>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 页面切换逻辑
+    function switchPage(pageId) {
+        document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        document.getElementById(pageId).scrollTop = 0;
+    }
+
+    // 全局 Toast 提示
+    let toastTimeout;
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.innerText = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 2500);
+    }
+
+    // 底部弹窗 Sheet
+    function openSheet(title, placeholder, successMsg) {
+        document.getElementById('sheet-content').innerHTML = `
+            <h3 style="margin-bottom:16px; font-size:18px; color:#333;">${title}</h3>
+            <textarea placeholder="${placeholder}" style="width:100%; height:100px; border:1px solid #E8E8E8; border-radius:8px; padding:12px; font-size:14px; margin-bottom:16px; outline:none; resize:none;"></textarea>
+            <button class="btn-primary" style="width:100%; padding:14px; font-size:16px; border-radius:12px;" onclick="submitSheet('${successMsg}')">提交</button>
+        `;
+        document.getElementById('overlay').classList.add('show');
+    }
+    
+    function closeSheet() {
+        document.getElementById('overlay').classList.remove('show');
+    }
+
+    function submitSheet(msg) {
+        closeSheet();
+        setTimeout(() => showToast(msg), 300);
+    }
+
+    // 单选框选中效果
+    function selectSlot(element) {
+        document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+    }
+
+    // 确认约课弹窗
+    function confirmBooking() {
+        const activeSlot = document.querySelector('.time-slot.active h4').innerText;
+        document.getElementById('sheet-content').innerHTML = `
+            <div style="font-size:50px; margin-bottom:16px;">🎉</div>
+            <h3 style="margin-bottom:16px; font-size:20px; color:#333;">约课成功</h3>
+            <p style="color:#666; font-size:14px; margin-bottom:24px;">已为您锁定：<br><b style="color:#1677FF; font-size:16px;">${activeSlot}</b><br><br>课表已同步，上课前 2 小时将提醒您。</p>
+            <button class="btn-primary" style="width:100%; padding:14px; font-size:16px; border-radius:12px;" onclick="closeSheet(); switchPage('page-parent');">知道了</button>
+        `;
+        document.getElementById('overlay').classList.add('show');
+    }
+
+    // 模拟录音动画
+    function startRecording() {
+        const modal = document.getElementById('recording-modal');
+        const progress = document.getElementById('record-progress');
+        
+        // 重置进度
+        progress.style.transition = 'none';
+        progress.style.width = '0%';
+        
+        modal.classList.add('show');
+        
+        setTimeout(() => {
+            // 启动进度条
+            progress.style.transition = 'width 2.5s linear';
+            progress.style.width = '100%';
+        }, 100);
+
+        setTimeout(() => {
+            modal.classList.remove('show');
+            showToast('🌟 AI 评分：92分！发音非常饱满，继续保持！');
+        }, 2800);
+    }
+</script>
+</body>
+</html>
